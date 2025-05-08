@@ -16,7 +16,12 @@ from ai_scientist.llm import (
     AVAILABLE_LLMS,
 )
 
-from ai_scientist.tools.semantic_scholar import search_for_papers
+# Import both search functions, but default to Entrez
+from ai_scientist.tools.entrez import search_for_papers as entrez_search_for_papers
+from ai_scientist.tools.semantic_scholar import search_for_papers as semantic_scholar_search_for_papers
+
+# Default to Entrez API
+search_for_papers = entrez_search_for_papers
 
 from ai_scientist.perform_vlm_review import generate_vlm_img_review
 from ai_scientist.vlm import create_client as create_vlm_client
@@ -460,7 +465,16 @@ def perform_writeup(
     big_model="o1-2024-12-17",
     n_writeup_reflections=3,
     page_limit=8,
+    use_semantic_scholar=False,
 ):
+    # Set the search function based on the argument
+    global search_for_papers
+    if use_semantic_scholar:
+        search_for_papers = semantic_scholar_search_for_papers
+        print("Using Semantic Scholar API for literature search")
+    else:
+        search_for_papers = entrez_search_for_papers
+        print("Using Entrez API for literature search")
     compile_attempt = 0
     base_pdf_file = osp.join(base_folder, f"{osp.basename(base_folder)}")
     latex_folder = osp.join(base_folder, "latex")
@@ -791,6 +805,11 @@ if __name__ == "__main__":
         default=8,
         help="Target page limit for the main paper (excluding references, impact statement, etc.)",
     )
+    parser.add_argument(
+        "--use-semantic-scholar",
+        action="store_true",
+        help="Use Semantic Scholar API instead of Entrez API for literature search.",
+    )
     args = parser.parse_args()
 
     try:
@@ -802,6 +821,7 @@ if __name__ == "__main__":
             big_model=args.big_model,
             n_writeup_reflections=args.writeup_reflections,
             page_limit=args.page_limit,
+            use_semantic_scholar=args.use_semantic_scholar,
         )
         if not success:
             print("Writeup process did not complete successfully.")

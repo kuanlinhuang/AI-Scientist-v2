@@ -14,15 +14,17 @@ from ai_scientist.llm import (
     get_response_from_llm,
 )
 
+from ai_scientist.tools.entrez import EntrezSearchTool
 from ai_scientist.tools.semantic_scholar import SemanticScholarSearchTool
 from ai_scientist.tools.base_tool import BaseTool
 
 # Create tool instances
+entrez_tool = EntrezSearchTool()
 semantic_scholar_tool = SemanticScholarSearchTool()
 
 # Define tools at the top of the file
 tools = [
-    semantic_scholar_tool,
+    entrez_tool,
     {
         "name": "FinalizeIdea",
         "description": """Finalize your idea by providing the idea details.
@@ -295,10 +297,43 @@ if __name__ == "__main__":
         default=5,
         help="Number of reflection rounds per proposal.",
     )
+    parser.add_argument(
+        "--use-semantic-scholar",
+        action="store_true",
+        help="Use Semantic Scholar API instead of Entrez API for literature search.",
+    )
     args = parser.parse_args()
 
     # Create the LLM client
     client, client_model = create_client(args.model)
+
+    # Update tools list based on command-line argument
+    if args.use_semantic_scholar:
+        print("Using Semantic Scholar API for literature search")
+        tools[0] = semantic_scholar_tool
+    else:
+        print("Using Entrez API for literature search")
+        tools[0] = entrez_tool
+
+    # Update tools dictionary
+    tools_dict = {tool.name: tool for tool in tools if isinstance(tool, BaseTool)}
+
+    # Update tool descriptions
+    tool_descriptions = "\n\n".join(
+        (
+            f"- **{tool.name}**: {tool.description}"
+            if isinstance(tool, BaseTool)
+            else f"- **{tool['name']}**: {tool['description']}"
+        )
+        for tool in tools
+    )
+
+    # Update tool names
+    tool_names = [
+        f'"{tool.name}"' if isinstance(tool, BaseTool) else f'"{tool["name"]}"'
+        for tool in tools
+    ]
+    tool_names_str = ", ".join(tool_names)
 
     with open(args.workshop_file, "r") as f:
         workshop_description = f.read()

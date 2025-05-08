@@ -19,7 +19,12 @@ from ai_scientist.llm import (
 
 from ai_scientist.utils.token_tracker import track_token_usage
 
-from ai_scientist.tools.semantic_scholar import search_for_papers
+# Import both search functions, but default to Entrez
+from ai_scientist.tools.entrez import search_for_papers as entrez_search_for_papers
+from ai_scientist.tools.semantic_scholar import search_for_papers as semantic_scholar_search_for_papers
+
+# Default to Entrez API
+search_for_papers = entrez_search_for_papers
 
 from ai_scientist.perform_vlm_review import (
     generate_vlm_img_review,
@@ -742,7 +747,7 @@ def filter_experiment_summaries(exp_summaries, step_name):
     return filtered_summaries
 
 
-def gather_citations(base_folder, num_cite_rounds=20, small_model="gpt-4o-2024-05-13"):
+def gather_citations(base_folder, num_cite_rounds=20, small_model="gpt-4o-2024-05-13", use_semantic_scholar=False):
     """
     Gather citations for a paper, with ability to resume from previous progress.
 
@@ -750,11 +755,20 @@ def gather_citations(base_folder, num_cite_rounds=20, small_model="gpt-4o-2024-0
         base_folder: Path to project folder
         num_cite_rounds: Maximum number of citation gathering rounds
         small_model: Model to use for citation collection
+        use_semantic_scholar: Whether to use Semantic Scholar API instead of Entrez
         resume: Whether to try to resume from previous progress
 
     Returns:
         str: The gathered citations text, or None if failed
     """
+    # Set the search function based on the argument
+    global search_for_papers
+    if use_semantic_scholar:
+        search_for_papers = semantic_scholar_search_for_papers
+        print("Using Semantic Scholar API for literature search")
+    else:
+        search_for_papers = entrez_search_for_papers
+        print("Using Entrez API for literature search")
 
     # Paths for storing progress
     citations_cache_path = osp.join(base_folder, "cached_citations.bib")
@@ -863,6 +877,7 @@ def perform_writeup(
     big_model="o1-2024-12-17",
     n_writeup_reflections=3,
     page_limit=4,
+    use_semantic_scholar=False,
 ):
     pdf_file = osp.join(base_folder, f"{osp.basename(base_folder)}.pdf")
     latex_folder = osp.join(base_folder, "latex")
@@ -933,7 +948,7 @@ def perform_writeup(
             # If still no citations, gather them
             if not citations_text:
                 citations_text = gather_citations(
-                    base_folder, num_cite_rounds, small_model
+                    base_folder, num_cite_rounds, small_model, use_semantic_scholar
                 )
                 if citations_text is None:
                     print("Warning: Citation gathering failed")
@@ -1273,6 +1288,11 @@ if __name__ == "__main__":
         default=4,
         help="Target page limit for the main paper (excluding references).",
     )
+    parser.add_argument(
+        "--use-semantic-scholar",
+        action="store_true",
+        help="Use Semantic Scholar API instead of Entrez API for literature search.",
+    )
     args = parser.parse_args()
 
     try:
@@ -1284,6 +1304,7 @@ if __name__ == "__main__":
             big_model=args.big_model,
             n_writeup_reflections=args.writeup_reflections,
             page_limit=args.page_limit,
+            use_semantic_scholar=args.use_semantic_scholar,
         )
         if not success:
             print("Writeup process did not complete successfully.")

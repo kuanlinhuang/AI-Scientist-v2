@@ -122,6 +122,11 @@ def parse_arguments():
         action="store_true",
         help="If set, skip the review process",
     )
+    parser.add_argument(
+        "--use-semantic-scholar",
+        action="store_true",
+        help="Use Semantic Scholar API instead of Entrez API for literature search.",
+    )
     return parser.parse_args()
 
 
@@ -268,6 +273,7 @@ if __name__ == "__main__":
             idea_dir,
             num_cite_rounds=args.num_cite_rounds,
             small_model=args.model_citation,
+            use_semantic_scholar=args.use_semantic_scholar,
         )
         for attempt in range(args.writeup_retries):
             print(f"Writeup attempt {attempt+1} of {args.writeup_retries}")
@@ -277,6 +283,7 @@ if __name__ == "__main__":
                     big_model=args.model_writeup,
                     page_limit=8,
                     citations_text=citations_text,
+                    use_semantic_scholar=args.use_semantic_scholar,
                 )
             else:
                 writeup_success = perform_icbinb_writeup(
@@ -284,6 +291,7 @@ if __name__ == "__main__":
                     big_model=args.model_writeup,
                     page_limit=4,
                     citations_text=citations_text,
+                    use_semantic_scholar=args.use_semantic_scholar,
                 )
             if writeup_success:
                 break

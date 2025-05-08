@@ -76,16 +76,35 @@ pip install anthropic[bedrock]
 ```
 Next, configure valid [AWS Credentials](https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-envvars.html) and the target [AWS Region](https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-regions.html) by setting the following environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION_NAME`.
 
-#### Semantic Scholar API (Literature Search)
+#### Literature Search APIs
 
-Our code can optionally use a Semantic Scholar API Key (`S2_API_KEY`) for higher throughput during literature search [if you have one](https://www.semanticscholar.org/product/api). This is used during both the ideation and paper writing stages. The system should work without it, though you might encounter rate limits or reduced novelty checking during ideation. If you experience issues with Semantic Scholar, you can skip the citation phase during paper generation.
+By default, the system uses the NCBI Entrez API for literature search during both the ideation and paper writing stages. You can optionally use the Semantic Scholar API instead.
+
+##### Entrez API (Default)
+
+The system uses the NCBI Entrez API by default, which doesn't require an API key for basic usage. However, you can set the following environment variables for better performance:
+
+- `ENTREZ_API_KEY`: Your NCBI Entrez API key for higher throughput [get one here](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/)
+- `ENTREZ_EMAIL`: Your email address (required by NCBI for tracking purposes)
+
+Without an API key, you might encounter rate limits, but the system should still work for basic usage.
+
+##### Semantic Scholar API (Optional)
+
+You can optionally use the Semantic Scholar API by setting the `S2_API_KEY` environment variable and using the `--use-semantic-scholar` flag with the relevant scripts. This might be useful if you have a Semantic Scholar API Key [get one here](https://www.semanticscholar.org/product/api) and prefer to use it over Entrez.
 
 #### Setting API Keys
 
-Ensure you provide the necessary API keys as environment variables for the models you intend to use. For example:
+Ensure you provide the necessary API keys as environment variables for the models and APIs you intend to use. For example:
 ```bash
+# LLM API Keys
 export OPENAI_API_KEY="YOUR_OPENAI_KEY_HERE"
-export S2_API_KEY="YOUR_S2_KEY_HERE"
+
+# Literature Search APIs
+export ENTREZ_API_KEY="YOUR_ENTREZ_KEY_HERE"  # Optional, for higher throughput
+export ENTREZ_EMAIL="your.email@example.com"  # Recommended for Entrez API
+export S2_API_KEY="YOUR_S2_KEY_HERE"  # Only needed if using --use-semantic-scholar flag
+
 # Set AWS credentials if using Bedrock
 # export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
 # export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_KEY"
@@ -101,11 +120,20 @@ Before running the full AI Scientist-v2 experiment pipeline, you first use the `
 2.  **Run the Ideation Script:** Execute the script from the main project directory, pointing it to your topic description file and specifying the desired LLM.
 
     ```bash
+    # Using the default Entrez API for literature search
     python ai_scientist/perform_ideation_temp_free.py \
      --workshop-file "ai_scientist/ideas/my_research_topic.md" \
      --model gpt-4o-2024-05-13 \
      --max-num-generations 20 \
      --num-reflections 5
+
+    # Or, if you prefer to use Semantic Scholar API instead
+    # python ai_scientist/perform_ideation_temp_free.py \
+    #  --workshop-file "ai_scientist/ideas/my_research_topic.md" \
+    #  --model gpt-4o-2024-05-13 \
+    #  --max-num-generations 20 \
+    #  --num-reflections 5 \
+    #  --use-semantic-scholar
     ```
     *   `--workshop-file`: Path to your topic description Markdown file.
     *   `--model`: The LLM to use for generating ideas (ensure you have the corresponding API key set).
@@ -139,6 +167,7 @@ Key tree search configuration parameters in `bfts_config.yaml`:
 Example command to run AI-Scientist-v2 using a generated idea file (e.g., `my_research_topic.json`). Please review `bfts_config.yaml` for detailed tree search parameters (the default config includes `claude-3-5-sonnet` for experiments). Do not set `load_code` if you do not want to initialize experimentation with a code snippet.
 
 ```bash
+# Using the default Entrez API for literature search
 python launch_scientist_bfts.py \
  --load_ideas "ai_scientist/ideas/my_research_topic.json" \
  --load_code \
@@ -148,6 +177,18 @@ python launch_scientist_bfts.py \
  --model_review gpt-4o-2024-11-20 \
  --model_agg_plots o3-mini-2025-01-31 \
  --num_cite_rounds 20
+
+# Or, if you prefer to use Semantic Scholar API instead
+# python launch_scientist_bfts.py \
+#  --load_ideas "ai_scientist/ideas/my_research_topic.json" \
+#  --load_code \
+#  --add_dataset_ref \
+#  --model_writeup o1-preview-2024-09-12 \
+#  --model_citation gpt-4o-2024-11-20 \
+#  --model_review gpt-4o-2024-11-20 \
+#  --model_agg_plots o3-mini-2025-01-31 \
+#  --num_cite_rounds 20 \
+#  --use-semantic-scholar
 ```
 
 Once the initial experimental stage is complete, you will find a timestamped log folder inside the `experiments/` directory. Navigate to `experiments/"timestamp_ideaname"/logs/0-run/` within that folder to find the tree visualization file `unified_tree_viz.html`.
@@ -179,9 +220,13 @@ The ideation step cost depends on the LLM used and the number of generations/ref
 
 First, perform the [Generate Research Ideas](#generate-research-ideas) step. Create a new Markdown file describing your desired subject field or topic, following the structure of the example `ai_scientist/ideas/i_cant_believe_its_not_better.md`. Run the `perform_ideation_temp_free.py` script with this file to generate a corresponding JSON idea file. Then, proceed to the [Run AI Scientist-v2 Paper Generation Experiments](#run-ai-scientist-v2-paper-generation-experiments) step, using this JSON file with the `launch_scientist_bfts.py` script via the `--load_ideas` argument.
 
-**What should I do if I have problems accessing the Semantic Scholar API?**
+**What should I do if I have problems accessing the literature search APIs?**
 
-The Semantic Scholar API is used to assess the novelty of generated ideas and to gather citations during the paper write-up phase. If you don't have an API key, encounter rate limits, you may be able to skip these phases.
+By default, the system uses the NCBI Entrez API for literature search, which doesn't require an API key for basic usage. If you encounter rate limits with Entrez, you can:
+1. Set the `ENTREZ_API_KEY` and `ENTREZ_EMAIL` environment variables to increase your rate limits
+2. Use the Semantic Scholar API instead by setting the `S2_API_KEY` environment variable and using the `--use-semantic-scholar` flag
+
+If you continue to have issues with both APIs, you may be able to skip the citation phases, though this might affect the quality of the generated ideas and papers.
 
 **I encountered a "CUDA Out of Memory" error. What can I do?**
 
