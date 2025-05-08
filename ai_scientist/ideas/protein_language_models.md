@@ -1,0 +1,10 @@
+# Title: Advancing Research on Protein Language Models: Challenges and Opportunities
+
+## Keywords
+protein language models, structural biology, protein design, sequence-to-function prediction, zero-shot learning
+
+## TL;DR
+How can we advance protein language models to better capture protein structure, function, and design principles? This workshop explores challenges and opportunities in developing next-generation protein language models for biological discovery.
+
+## Abstract
+Protein language models (PLMs) have emerged as powerful tools for understanding and engineering proteins by learning the complex relationships between amino acid sequences and their structural, functional, and evolutionary properties. These models, inspired by advances in natural language processing, have demonstrated remarkable capabilities in predicting protein properties, designing novel proteins, and understanding protein-protein interactions. However, despite their success, current PLMs face significant challenges in accurately modeling long-range interactions, capturing the full complexity of protein folding, and generalizing to novel protein families. This workshop aims to bring together researchers from computational biology, machine learning, and structural biology to address these challenges and explore new directions for advancing protein language models. We invite contributions that focus on improving model architectures, incorporating structural information, enhancing training methodologies, and developing novel applications of PLMs in drug discovery, enzyme engineering, and protein design. By fostering interdisciplinary collaboration, we hope to accelerate progress in developing more accurate, efficient, and interpretable protein language models that can drive biological discovery and innovation. The workshop will emphasize both theoretical advances and practical applications, with a particular focus on addressing the limitations of current models and exploring new paradigms for protein representation learning.

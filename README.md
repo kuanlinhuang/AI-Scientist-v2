@@ -220,6 +220,41 @@ The ideation step cost depends on the LLM used and the number of generations/ref
 
 First, perform the [Generate Research Ideas](#generate-research-ideas) step. Create a new Markdown file describing your desired subject field or topic, following the structure of the example `ai_scientist/ideas/i_cant_believe_its_not_better.md`. Run the `perform_ideation_temp_free.py` script with this file to generate a corresponding JSON idea file. Then, proceed to the [Run AI Scientist-v2 Paper Generation Experiments](#run-ai-scientist-v2-paper-generation-experiments) step, using this JSON file with the `launch_scientist_bfts.py` script via the `--load_ideas` argument.
 
+**Example: Protein Language Models Workshop**
+
+We've included a workshop focused on advancing research on protein language models:
+
+1. Workshop description: `ai_scientist/ideas/protein_language_models.md`
+2. Example code: `ai_scientist/ideas/protein_language_models.py`
+3. MAVE datasets: Located in `ai_scientist/ideas/protein_language_models_data/`
+
+To run this workshop:
+```bash
+# Generate research ideas
+python ai_scientist/perform_ideation_temp_free.py \
+ --workshop-file "ai_scientist/ideas/protein_language_models.md" \
+ --model gpt-4o-2024-05-13 \
+ --max-num-generations 1 \
+ --num-reflections 5
+
+# Run experiments
+python launch_scientist_bfts.py \
+ --load_ideas "ai_scientist/ideas/protein_language_models.json" \
+ --load_code \
+ --add_dataset_ref \
+ --model_writeup o1-preview-2024-09-12 \
+ --model_citation gpt-4o-2024-11-20 \
+ --model_review gpt-4o-2024-11-20 \
+ --model_agg_plots o3-mini-2025-01-31 \
+ --num_cite_rounds 20
+```
+
+The workshop includes MAVE (Multiplexed Assays of Variant Effects) datasets for protein variant effect prediction:
+- BRCA1_HUMAN_Findlay_2018.csv - BRCA1 variant effect data
+- BRCA2_HUMAN_Erwood_2022_HEK293T.csv - BRCA2 variant effect data
+- HXK4_HUMAN_Gersing_2022_activity.csv - Hexokinase 4 activity data
+- CBX4_HUMAN_Tsuboyama_2023_2K28.csv - Chromobox protein homolog 4 data
+
 **What should I do if I have problems accessing the literature search APIs?**
 
 By default, the system uses the NCBI Entrez API for literature search, which doesn't require an API key for basic usage. If you encounter rate limits with Entrez, you can:
