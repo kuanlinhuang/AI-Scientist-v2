@@ -23,7 +23,7 @@ exec:
 generate_report: True
 # LLM settings for final report from journal
 report:
-  model: gpt-4o-2024-11-20
+  model: gpt-4o
   temp: 1.0
 
 experiment:
@@ -54,19 +54,19 @@ agent:
 
   # LLM settings for coding
   code:
-    model: anthropic.claude-3-5-sonnet-20241022-v2:0
+    model: gpt-4o
     temp: 1.0
     max_tokens: 12000
 
   # LLM settings for evaluating program output / tracebacks
   feedback:
-    model: gpt-4o-2024-11-20
+    model: gpt-4o
     # gpt-4o
     temp: 0.5
     max_tokens: 8192
 
   vlm_feedback:
-    model: gpt-4o-2024-11-20
+    model: gpt-4o
     temp: 0.5
     max_tokens: null
 
